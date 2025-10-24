@@ -19,11 +19,14 @@ export const AuthProvider = ({ children }) => {
     if (savedUser) {
       setUser(JSON.parse(savedUser));
     }
+    console.log("Loading state set to false");
+    console.log("User authenticated:", !!user);
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
     try {
+      console.log("Attempting login with:", { email, password });
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -31,6 +34,7 @@ export const AuthProvider = ({ children }) => {
       });
       const data = await response.json();
       if (response.ok && data.token) {
+        console.log("Login response data:", data);
         const userData = {
           id: data.user._id,
           name: data.user.name,
@@ -49,6 +53,51 @@ export const AuthProvider = ({ children }) => {
       console.error("Login error:", error);
       return false;
     }
+  };
+
+  // Function to refresh token
+  const refreshToken = async () => {
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.token) {
+          const updatedUser = { ...user, token: data.token };
+          setUser(updatedUser);
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          localStorage.setItem("token", data.token);
+          return data.token;
+        }
+      }
+    } catch (error) {
+      console.error("Token refresh failed:", error);
+    }
+    return null;
+  };
+
+  // Function to check if token is expired
+  const isTokenExpired = (token) => {
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.exp * 1000 < Date.now();
+    } catch (error) {
+      return true;
+    }
+  };
+
+  // Function to get valid token (checks expiration and refreshes if needed)
+  const getValidToken = async () => {
+    const currentToken = user?.token || localStorage.getItem("token");
+    if (!currentToken || isTokenExpired(currentToken)) {
+      const newToken = await refreshToken();
+      return newToken || currentToken;
+    }
+    return currentToken;
   };
 
   const register = async (name, email, password, userType) => {
@@ -117,6 +166,9 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    refreshToken,
+    getValidToken,
+    isTokenExpired,
     isAuthenticated: !!user,
     loading,
   };

@@ -15,14 +15,14 @@ const authRoutes = require("./routes/auth");
 const propertyRoutes = require("./routes/property");
 const userRoutes = require("./routes/user");
 const chatRoutes = require("./routes/chat");
+const bookingRoutes = require("./routes/booking");
+const contactRoutes = require("./routes/contact");
 
 const app = express();
 
 // Configure CORS to allow frontend requests
 const corsOptions = {
   origin: [
-    "http://localhost:5173",
-    "http://localhost:3000",
     "http://localhost:5174",
     "http://localhost:5175",
     "http://localhost:5002",
@@ -51,6 +51,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/properties", propertyRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/contact", contactRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

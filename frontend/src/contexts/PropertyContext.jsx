@@ -13,7 +13,7 @@ export const useProperty = () => {
 };
 
 export const PropertyProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, getValidToken, refreshToken } = useAuth();
   const [properties, setProperties] = useState([]);
 
   const fetchAllProperties = async () => {
@@ -44,11 +44,17 @@ export const PropertyProvider = ({ children }) => {
 
   const addProperty = async (propertyData) => {
     try {
-      const token = user?.token; // Assuming token is stored in user object
+      // Get a valid token (check expiration and refresh if needed)
+      const token = await getValidToken();
+
+      if (!token) {
+        throw new Error("No valid authentication token available");
+      }
+
       const response = await axios.post("/api/properties", propertyData, {
         headers: {
           "Content-Type": "multipart/form-data",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          Authorization: `Bearer ${token}`,
         },
         withCredentials: true,
       });
@@ -56,6 +62,34 @@ export const PropertyProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       console.error("Failed to add property", error);
+
+      // If it's an authentication error, try to refresh token and retry once
+      if (error.response?.status === 401) {
+        try {
+          const newToken = await refreshToken();
+          if (newToken) {
+            const retryResponse = await axios.post(
+              "/api/properties",
+              propertyData,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                  Authorization: `Bearer ${newToken}`,
+                },
+                withCredentials: true,
+              }
+            );
+            setProperties((prevProperties) => [
+              ...prevProperties,
+              retryResponse.data,
+            ]);
+            return retryResponse.data;
+          }
+        } catch (retryError) {
+          console.error("Retry failed after token refresh:", retryError);
+        }
+      }
+
       throw error;
     }
   };

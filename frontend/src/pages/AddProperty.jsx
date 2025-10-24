@@ -20,7 +20,11 @@ const AddProperty = () => {
     amenities: [],
     parking: "",
     images: [],
-    // Removed ownerName, ownerPhone, ownerEmail
+    qrCode: "",
+    ownerName: "",
+    ownerPhone: "",
+    ownerEmail: "",
+    paymentScreenshot: null,
   });
 
   const [loading, setLoading] = useState(false);
@@ -53,6 +57,15 @@ const AddProperty = () => {
       ...prev,
       images: [...prev.images, ...files],
     }));
+    console.log("Uploaded images:", files); // Log uploaded images
+  };
+
+  const handlePaymentScreenshotUpload = (e) => {
+    const file = e.target.files[0];
+    setFormData((prev) => ({
+      ...prev,
+      paymentScreenshot: file,
+    }));
   };
 
   const removeImage = (index) => {
@@ -69,7 +82,7 @@ const AddProperty = () => {
     console.log("Form data:", formData);
 
     if (!user || !user.token) {
-      setError("You must be logged in to add a property.");
+      setError("You must be logged in to add a property."); // Ensure user is authenticated
       return;
     }
 
@@ -79,28 +92,45 @@ const AddProperty = () => {
     try {
       const formDataToSend = new FormData();
 
-      // Append all form data
-      Object.keys(formData).forEach((key) => {
-        if (key === "images") {
-          formData.images.forEach((image) => {
-            formDataToSend.append("images", image);
-          });
-        } else if (key === "amenities") {
-          formDataToSend.append(
-            "amenities",
-            JSON.stringify(formData.amenities)
-          );
-        } else {
-          formDataToSend.append(key, formData[key]);
-        }
+      // Append all form data fields
+      formDataToSend.append("title", formData.title);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("type", formData.type);
+      formDataToSend.append("location", formData.location);
+      formDataToSend.append("price", formData.price);
+      formDataToSend.append("bedrooms", formData.bedrooms);
+      formDataToSend.append("bathrooms", formData.bathrooms);
+      formDataToSend.append("area", formData.area);
+      formDataToSend.append("furnished", formData.furnished);
+      formDataToSend.append(
+        "securityDeposit",
+        formData.securityDeposit || (formData.price * 0.3).toFixed(0)
+      );
+      formDataToSend.append(
+        "maintenanceCharges",
+        formData.maintenanceCharges || ""
+      );
+      formDataToSend.append("parking", formData.parking);
+      formDataToSend.append("amenities", JSON.stringify(formData.amenities));
+
+      // Append additional fields
+      formDataToSend.append("qrCode", formData.qrCode || "");
+      formDataToSend.append("ownerName", formData.ownerName || "");
+      formDataToSend.append("ownerPhone", formData.ownerPhone || "");
+      formDataToSend.append("ownerEmail", formData.ownerEmail || "");
+
+      // Append images
+      formData.images.forEach((image) => {
+        formDataToSend.append("images", image);
       });
 
-      // Remove appending owner ID from auth context since backend sets owner from token
-      // if (user?.id) {
-      //   formDataToSend.append("owner", user.id);
-      // }
+      // Append payment screenshot if exists
+      if (formData.paymentScreenshot) {
+        formDataToSend.append("paymentScreenshot", formData.paymentScreenshot);
+      }
 
-      await addProperty(formDataToSend);
+      const response = await addProperty(formDataToSend);
+      console.log("Response from addProperty:", response);
       setSuccess(true);
 
       // Reset form
@@ -119,6 +149,11 @@ const AddProperty = () => {
         amenities: [],
         parking: "",
         images: [],
+        qrCode: "",
+        ownerName: "",
+        ownerPhone: "",
+        ownerEmail: "",
+        paymentScreenshot: null,
       });
       setCurrentStep(1);
     } catch (err) {
@@ -157,7 +192,7 @@ const AddProperty = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div className="space-y-4">
+          <div className="space-y-4 transition-opacity duration-300">
             <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -167,7 +202,7 @@ const AddProperty = () => {
                 name="type"
                 value={formData.type}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                 required
               >
                 <option value="">Select Type</option>
@@ -183,7 +218,7 @@ const AddProperty = () => {
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                 placeholder="e.g., 2BHK Apartment in City Center"
                 required
               />
@@ -196,7 +231,7 @@ const AddProperty = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                 rows="4"
                 placeholder="Describe your property..."
                 required
@@ -216,7 +251,7 @@ const AddProperty = () => {
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                 placeholder="e.g., Alkapuri, Vadodara"
                 required
               />
@@ -238,7 +273,7 @@ const AddProperty = () => {
                   name="bedrooms"
                   value={formData.bedrooms}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   min="0"
                   required
                 />
@@ -252,7 +287,7 @@ const AddProperty = () => {
                   name="bathrooms"
                   value={formData.bathrooms}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   min="0"
                   required
                 />
@@ -268,7 +303,7 @@ const AddProperty = () => {
                   name="area"
                   value={formData.area}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   required
                 />
               </div>
@@ -280,7 +315,7 @@ const AddProperty = () => {
                   name="furnished"
                   value={formData.furnished}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   required
                 >
                   <option value="">Select</option>
@@ -300,21 +335,25 @@ const AddProperty = () => {
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Security Deposit
+                  Security Deposit (30% of rent)
                 </label>
                 <input
                   type="number"
                   name="securityDeposit"
-                  value={formData.securityDeposit}
+                  value={
+                    formData.securityDeposit ||
+                    (formData.price * 0.3).toFixed(0)
+                  }
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   required
+                  readOnly
                 />
               </div>
             </div>
@@ -327,7 +366,7 @@ const AddProperty = () => {
                 name="maintenanceCharges"
                 value={formData.maintenanceCharges}
                 onChange={handleInputChange}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
               />
             </div>
           </div>
@@ -336,6 +375,109 @@ const AddProperty = () => {
       case 4:
         return (
           <div className="space-y-4">
+            <h3 className="text-lg font-semibold mb-4">QR Code Payment</h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Scan QR Code to Pay Security Deposit
+              </label>
+              <div className="border rounded p-4 bg-white">
+                <p className="text-sm text-gray-600 mb-2">
+                  Please scan the QR code below to pay the security deposit (30%
+                  of rent). This amount will be refunded after your property is
+                  booked.
+                </p>
+                {/* Placeholder for QR code image - replace with your actual QR image */}
+                <div className="bg-gray-200 w-48 h-48 mx-auto flex items-center justify-center mb-2">
+                  <img
+                    src="/qr/PHOTO-2025-08-27-12-35-30.jpg"
+                    alt="Payment QR Code - Scan to pay platform charge"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 text-center">
+                  Amount: ₹
+                  {formData.securityDeposit ||
+                    (formData.price * 0.3).toFixed(0)}
+                </p>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Upload Payment Screenshot
+              </label>
+
+              {/* Short UI line */}
+              <p className="text-xs text-red-600 mb-4">
+                Any attempt to upload fake payment screenshots or commit fraud
+                will result in legal action and permanent blocking of your
+                account/ID.
+              </p>
+
+              {/* OR the more formal version */}
+              <p className="text-sm text-gray-600 mb-4">
+                By uploading payment proof you confirm the document is
+                authentic. Submitting forged or fraudulent payment screenshots
+                is a violation of our terms — offending accounts will be blocked
+                and may be reported to law enforcement.
+              </p>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePaymentScreenshotUpload}
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
+                required
+              />
+              {formData.paymentScreenshot && (
+                <p className="text-sm text-green-600 mt-2">
+                  Screenshot uploaded successfully
+                </p>
+              )}
+            </div>
+
+            <h3 className="text-lg font-semibold mb-4">Owner Information</h3>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Owner Name
+              </label>
+              <input
+                type="text"
+                name="ownerName"
+                value={formData.ownerName}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
+                placeholder="Owner Name"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Owner Phone
+              </label>
+              <input
+                type="text"
+                name="ownerPhone"
+                value={formData.ownerPhone}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
+                placeholder="Owner Phone"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Owner Email
+              </label>
+              <input
+                type="email"
+                name="ownerEmail"
+                value={formData.ownerEmail}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
+                placeholder="Owner Email"
+                required
+              />
+            </div>
+
             <h3 className="text-lg font-semibold mb-4">Amenities & Images</h3>
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -364,7 +506,7 @@ const AddProperty = () => {
                 multiple
                 accept="image/*"
                 onChange={handleImageUpload}
-                className="w-full p-2 border rounded"
+                className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
               />
               <div className="mt-2 flex flex-wrap gap-2">
                 {formData.images.map((image, index) => (
@@ -394,7 +536,7 @@ const AddProperty = () => {
                   name="parking"
                   value={formData.parking}
                   onChange={handleInputChange}
-                  className="w-full p-2 border rounded"
+                  className="w-full p-2 border rounded transition duration-200 focus:ring focus:ring-blue-300"
                   required
                 >
                   <option value="">Select</option>
@@ -402,7 +544,6 @@ const AddProperty = () => {
                   <option value="Not Available">Not Available</option>
                 </select>
               </div>
-              {/* Removed ownerName, ownerPhone, ownerEmail fields */}
             </div>
           </div>
         );
@@ -441,7 +582,7 @@ const AddProperty = () => {
                     currentStep >= step
                       ? "bg-blue-500 text-white"
                       : "bg-gray-200 text-gray-600"
-                  }`}
+                  } transition duration-200`}
                 >
                   {step}
                 </div>
@@ -451,7 +592,7 @@ const AddProperty = () => {
               <span className="text-xs">Basic Info</span>
               <span className="text-xs">Location</span>
               <span className="text-xs">Details</span>
-              <span className="text-xs">Amenities</span>
+              <span className="text-xs">Payment & Owner</span>
             </div>
           </div>
 
@@ -463,7 +604,7 @@ const AddProperty = () => {
                 type="button"
                 onClick={prevStep}
                 disabled={currentStep === 1}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded disabled:opacity-50 transition duration-200 hover:bg-gray-400"
               >
                 Previous
               </button>
@@ -471,7 +612,7 @@ const AddProperty = () => {
                 <button
                   type="button"
                   onClick={nextStep}
-                  className="px-4 py-2 bg-blue-500 text-white rounded"
+                  className="px-4 py-2 bg-blue-500 text-white rounded transition duration-200 hover:bg-blue-600"
                 >
                   Next
                 </button>
@@ -479,7 +620,7 @@ const AddProperty = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50"
+                  className="px-4 py-2 bg-green-500 text-white rounded disabled:opacity-50 transition duration-200 hover:bg-green-600"
                 >
                   {loading ? "Adding..." : "Add Property"}
                 </button>

@@ -59,15 +59,34 @@ router.get("/owner/:ownerId", async (req, res) => {
   }
 });
 
+// Get property by ID
+router.get("/:id", async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id).populate(
+      "owner",
+      "name email"
+    );
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+    res.json(property);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // Add new property with file upload support
 router.post(
   "/",
   authMiddleware,
-  upload.array("images", 5),
+  upload.fields([
+    { name: "images", maxCount: 5 },
+    { name: "paymentScreenshot", maxCount: 1 },
+  ]),
   async (req, res) => {
     console.log("Received property creation request with body:", req.body);
     console.log("Files received:", req.files);
-
+    console.log("User ID:", req.user.id); // Log the user ID for debugging
     try {
       const {
         title,
@@ -83,6 +102,10 @@ router.post(
         maintenanceCharges,
         furnished,
         parking,
+        qrCode,
+        ownerName,
+        ownerPhone,
+        ownerEmail,
       } = req.body;
 
       // Get owner from authenticated user
@@ -94,8 +117,18 @@ router.post(
 
       // Handle uploaded images
       let imageUrls = [];
-      if (req.files && req.files.length > 0) {
-        imageUrls = req.files.map((file) => `/uploads/${file.filename}`);
+      if (req.files && req.files.images && req.files.images.length > 0) {
+        imageUrls = req.files.images.map((file) => `/uploads/${file.filename}`);
+      }
+
+      // Handle payment screenshot
+      let paymentScreenshotUrl = null;
+      if (
+        req.files &&
+        req.files.paymentScreenshot &&
+        req.files.paymentScreenshot.length > 0
+      ) {
+        paymentScreenshotUrl = `/uploads/${req.files.paymentScreenshot[0].filename}`;
       }
 
       const property = new Property({
@@ -119,12 +152,20 @@ router.post(
           : undefined,
         furnished,
         parking,
+        // Additional fields
+        qrCode: qrCode || undefined,
+        paymentScreenshot: paymentScreenshotUrl,
+        ownerName: ownerName || undefined,
+        ownerPhone: ownerPhone || undefined,
+        ownerEmail: ownerEmail || undefined,
       });
 
       const newProperty = await property.save();
       res.status(201).json(newProperty);
     } catch (err) {
       console.error("Property creation error:", err);
+      console.log("Request body:", req.body);
+      console.log("Uploaded files:", req.files);
       res.status(400).json({
         message: err.message || "Failed to create property",
         details: err.errors,

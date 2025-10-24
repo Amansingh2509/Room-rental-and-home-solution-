@@ -36,6 +36,12 @@ const propertySchema = new Schema(
       default: "available",
     },
     bookingCount: { type: Number, default: 0 },
+    // Additional fields from frontend form
+    qrCode: { type: String, trim: true },
+    paymentScreenshot: { type: String }, // URL to uploaded payment screenshot
+    ownerName: { type: String, trim: true },
+    ownerPhone: { type: String, trim: true },
+    ownerEmail: { type: String, trim: true },
   },
   { timestamps: true }
 );

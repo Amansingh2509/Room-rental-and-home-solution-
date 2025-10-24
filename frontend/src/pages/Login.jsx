@@ -28,16 +28,26 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
+    console.log("Form submitted with data:", formData);
     e.preventDefault();
-    setLoading(true);
+    console.log("Form submitted with data:", formData);
     setError("");
 
     try {
       if (isLogin) {
+        console.log("Attempting login with:", formData.email);
         const success = await login(formData.email, formData.password);
+        console.log("Login success:", success);
+        console.log("Login attempt result:", success);
         if (success) {
+          console.log(
+            "Login successful, token:",
+            localStorage.getItem("token")
+          );
+          console.log("Login successful, navigating to dashboard");
           navigate("/dashboard", { replace: true });
         } else {
+          console.log("Login failed");
           setError("Login failed - please check your credentials");
         }
       } else {
@@ -53,6 +63,7 @@ const Login = () => {
           formData.password,
           formData.userType
         );
+        console.log("Registration attempt result:", result);
         if (result.success) {
           setIsLogin(true);
           setError("Registration successful! Please login.");
@@ -84,7 +95,13 @@ const Login = () => {
 
         <div className="bg-white rounded-xl shadow-lg p-8">
           {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+            <div
+              className={`mb-4 p-3 rounded-lg ${
+                error.toLowerCase().includes("registration successful")
+                  ? "bg-green-100 border border-green-400 text-green-700"
+                  : "bg-red-100 border border-red-400 text-red-700"
+              }`}
+            >
               {error}
             </div>
           )}

@@ -17,9 +17,21 @@ const Contact = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Contact form submitted:", formData);
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      console.log("Contact form submitted successfully");
+    } else {
+      console.error("Failed to submit contact form");
+    }
     setFormData({
       name: "",
       email: "",
@@ -33,7 +45,7 @@ const Contact = () => {
     {
       icon: <Phone className="h-6 w-6" />,
       title: "Phone",
-      details: ["+91 98765 43210", "+91 87654 32109"],
+      details: ["+91 7667816204", "+91 7654090218"],
       description: "Call us for immediate assistance",
     },
     {
@@ -45,7 +57,7 @@ const Contact = () => {
     {
       icon: <MapPin className="h-6 w-6" />,
       title: "Address",
-      details: ["123 Business District", "New Delhi, India 110001"],
+      details: ["31,nand dham society, vadodara, Gujarat 390001"],
       description: "Visit our office for consultation",
     },
     {
@@ -61,22 +73,10 @@ const Contact = () => {
 
   const offices = [
     {
-      city: "New Delhi",
-      address: "123 Business District, Connaught Place, New Delhi 110001",
-      phone: "+91 98765 43210",
-      email: "delhi@renthome.com",
-    },
-    {
-      city: "Mumbai",
-      address: "456 Commercial Center, Bandra West, Mumbai 400050",
-      phone: "+91 87654 32109",
-      email: "mumbai@renthome.com",
-    },
-    {
-      city: "Bangalore",
-      address: "789 Tech Park, Koramangala, Bangalore 560034",
-      phone: "+91 76543 21098",
-      email: "bangalore@renthome.com",
+      city: "Vadodara",
+      address: "31,nand dham society, vadodara, Gujarat 390001",
+      phone: "+91 7667816204",
+      email: "amankr123iit@gmail.com",
     },
   ];
 

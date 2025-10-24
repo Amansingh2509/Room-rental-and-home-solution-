@@ -13,6 +13,12 @@ router.post("/register", async (req, res) => {
       return res.status(400).json({ message: "Email already exists" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("Creating user with data:", {
+      name,
+      email,
+      password,
+      userType,
+    });
     const newUser = await User.create({
       name,
       email,
@@ -32,6 +38,7 @@ router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
+    console.log("User found:", user);
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
     const isMatch = await bcrypt.compare(password, user.password);

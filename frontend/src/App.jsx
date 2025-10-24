@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Properties from "./pages/Properties.jsx";
-import PropertyDetail from "./pages/PropertyBooking";
+import PropertyDetails from "./pages/PropertyBookingEnhanced.jsx";
 import Services from "./pages/Services";
 import Contact from "./pages/Contact";
 import AddProperty from "./pages/AddProperty";
@@ -47,7 +47,7 @@ function App() {
           path="/property/:id"
           element={
             <ProtectedRoute>
-              <PropertyDetail />
+              <PropertyDetails />
             </ProtectedRoute>
           }
         />
